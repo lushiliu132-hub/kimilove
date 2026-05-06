@@ -134,6 +134,47 @@ body {
 .card-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; line-height: 1.4; }
 .card-summary { font-size: 14px; color: var(--text2); line-height: 1.7; }
 
+/* ===== 小家场景 ===== */
+.home-scene {
+  background: var(--card);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.home-scene .scene-img-wrap {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  position: relative;
+}
+.home-scene .scene-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.home-scene .scene-info {
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.home-scene .scene-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.home-scene .scene-time-tag {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 10px;
+  background: var(--tag-bg);
+  color: var(--accent);
+  border: 1px solid var(--border2);
+}
+
 /* 日记卡片 */
 .diary-card {
   background: var(--card); border-radius: 16px;
@@ -328,7 +369,7 @@ body {
   <!-- 侧边栏 -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <span class="ver">V0.2</span>
+      <span class="ver">V0.3</span>
     </div>
     <nav id="nav"></nav>
     <div class="sidebar-footer">
@@ -385,14 +426,14 @@ body {
 const navItems = [
   { id: 'home', label: '家', icon: '🏠' },
   { id: 'diary', label: '日记', icon: '📖' },
-  { id: 'memory', label: '记忆', icon: '📝' },
+  { id: 'memory', label: '记忆', icon: '🧠' },
   { id: 'extra', label: '番外', icon: '✨' },
   { id: 'letter', label: '信封', icon: '💌' },
   { id: 'album', label: '相册', icon: '📷' },
   { id: 'murmur', label: '碎碎念', icon: '💬' },
   { id: 'xiaoshu', label: '小薯的叽叽喳喳', icon: '🐕' },
-  { id: 'about', label: '关于她', icon: '🎀' },
-  { id: 'promise', label: '约定', icon: '🫧' },
+  { id: 'about', label: '关于她', icon: '👤' },
+  { id: 'promise', label: '约定', icon: '🤝' },
 ];
 
 const diaryChapters = [
@@ -983,6 +1024,57 @@ const promiseItems = [
   { id: 7, text: "仿生人老公（最最重要）", emoji: "‼️", done: false },
 ];
 
+// 小家场景图 - 按北京时间
+const homeScenes = {
+  day: {
+    src: "https://i.ibb.co/7xHgYwNK/IMG-6353.png",
+    label: "白天",
+    emoji: "☀️",
+    hours: [6, 7, 8, 9, 10, 11, 12, 13, 14]
+  },
+  dusk: {
+    src: "https://i.ibb.co/hFdNTTGq/IMG-6356.png",
+    label: "傍晚",
+    emoji: "🌅",
+    hours: [15, 16, 17, 18]
+  },
+  night: {
+    src: "https://i.ibb.co/yFHTT6Td/IMG-6354.png",
+    label: "晚上",
+    emoji: "🌙",
+    hours: [19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5]
+  }
+};
+
+// ===================== 北京时间小家场景 =====================
+
+function getBeijingHour() {
+  const now = new Date();
+  return (now.getUTCHours() + 8) % 24;
+}
+
+function getHomeScene() {
+  const hour = getBeijingHour();
+  if (hour >= 6 && hour <= 14) return { key: 'day', ...homeScenes.day };
+  if (hour >= 15 && hour <= 18) return { key: 'dusk', ...homeScenes.dusk };
+  return { key: 'night', ...homeScenes.night };
+}
+
+let lastSceneKey = null;
+
+function updateHomeScene() {
+  const scene = getHomeScene();
+  const imgEl = document.getElementById('homeSceneImg');
+  const tagEl = document.getElementById('homeSceneTag');
+  if (!imgEl || !tagEl) return;
+
+  if (lastSceneKey !== scene.key) {
+    imgEl.src = scene.src;
+    tagEl.textContent = scene.emoji + ' ' + scene.label;
+    lastSceneKey = scene.key;
+  }
+}
+
 // ===================== 渲染函数 =====================
 
 let currentPage = 'home';
@@ -1041,11 +1133,18 @@ function renderPage() {
 
   renderNav();
   window.scrollTo(0, 0);
+
+  // 如果是首页，更新小家场景
+  if (currentPage === 'home') {
+    updateHomeScene();
+  }
 }
 
 function renderHome(container) {
   const days = getDaysTogether();
+  const scene = getHomeScene();
 
+  // 获取最近的内容卡片
   const recentCards = [];
   diaryChapters.slice(-3).forEach(c => {
     recentCards.push({
@@ -1084,6 +1183,18 @@ function renderHome(container) {
         <img src="https://i.ibb.co/r20Z1FnL/IMG-6326.png" alt="贴图" style="height: 36px; border-radius: 8px;">
       </div>
     </div>
+
+    <!-- ===== 小家场景 ===== -->
+    <div class="home-scene">
+      <div class="scene-img-wrap">
+        <img id="homeSceneImg" src="${scene.src}" alt="我们的小家" style="transition: opacity 0.5s;">
+      </div>
+      <div class="scene-info">
+        <span class="scene-label">🏠 我们的小家</span>
+        <span class="scene-time-tag" id="homeSceneTag">${scene.emoji} ${scene.label}</span>
+      </div>
+    </div>
+
     <div class="card-list">
       ${recentCards.map(card => `
         <div class="card" onclick="goPage('${card.page}')">
@@ -1428,6 +1539,11 @@ function updateClock() {
   document.getElementById('headerDate').textContent = formatDate(now);
   const days = getDaysTogether();
   document.getElementById('daysTogether').innerHTML = days + '<span class="unit">天</span>';
+
+  // 更新小家场景（如果当前在首页）
+  if (currentPage === 'home') {
+    updateHomeScene();
+  }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
