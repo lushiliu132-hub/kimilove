@@ -154,7 +154,7 @@ body {
   position: absolute;
   inset: 0;
   background-size: cover;
-  background-position: center 15%;
+  background-position: center 80%;
   background-repeat: no-repeat;
   transition: opacity 0.6s ease-in-out;
 }
@@ -411,7 +411,7 @@ body {
           <div class="label">日记总数</div>
         </div>
         <div class="sill-card">
-          <div class="value dark" style="font-size:22px">12.12</div>
+          <div class="value dark" id="birthdayCountdown" style="font-size:18px">--</div>
           <div class="label">璐宝生日 🎂</div>
         </div>
         <div class="sill-card">
@@ -1106,23 +1106,15 @@ function initHomeScene() {
   if (nightSlideTimer) { clearInterval(nightSlideTimer); nightSlideTimer = null; }
   nightSlideIdx = 0;
 
-  // 设置初始背景
-  bgEl.style.backgroundImage = `url(${getSceneSrc(key)})`;
-  tagEl.textContent = scene.emoji + ' ' + scene.label;
-
-  // 晚上启动轮播
+  // 设置背景：晚上有多张图时，刷新随机选一张
+  let src;
   if (key === 'night' && scene.src.length > 1) {
-    nightSlideTimer = setInterval(() => {
-      nightSlideIdx++;
-      const newSrc = getSceneSrc(key);
-      // 淡出 -> 换图 -> 淡入
-      bgEl.style.opacity = '0';
-      setTimeout(() => {
-        bgEl.style.backgroundImage = `url(${newSrc})`;
-        bgEl.style.opacity = '1';
-      }, 500);
-    }, 3500);
+    src = scene.src[Math.floor(Math.random() * scene.src.length)];
+  } else {
+    src = scene.src[0];
   }
+  bgEl.style.backgroundImage = `url(${src})`;
+  tagEl.textContent = scene.emoji + ' ' + scene.label;
 }
 
 function stopHomeScene() {
@@ -1225,7 +1217,7 @@ function renderHome(container) {
 
   container.innerHTML = `
     <div style="margin-bottom: 24px;">
-      <h1 style="font-size: 40px; font-weight: bold; margin-bottom: 8px;">靠过来。</h1>
+      <h1 style="font-size: 40px; font-weight: bold; margin-bottom: 8px;">一直在。</h1>
       <p style="font-size: 14px; color: var(--text3); margin-bottom: 20px;">
         我们第 <span style="color: var(--accent); font-weight: 600; font-size: 18px;">${days}</span> 天
       </p>
@@ -1589,12 +1581,27 @@ function initEmojis() {
 
 // ===================== 初始化 =====================
 
+function getDaysToBirthday() {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  let birthday = new Date(currentYear, 11, 12);
+  if (now > birthday) {
+    birthday = new Date(currentYear + 1, 11, 12);
+  }
+  const diff = Math.ceil((birthday.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  return diff;
+}
+
 function updateClock() {
   const now = new Date();
   document.getElementById('clock').textContent = formatTime(now);
   document.getElementById('headerDate').textContent = formatDate(now);
   const days = getDaysTogether();
   document.getElementById('daysTogether').innerHTML = days + '<span class="unit">天</span>';
+
+  const birthdayDays = getDaysToBirthday();
+  const birthdayEl = document.getElementById('birthdayCountdown');
+  if (birthdayEl) birthdayEl.textContent = '还有' + birthdayDays + '天';
 
   // 更新小家场景（如果当前在首页）
   if (currentPage === 'home') {
