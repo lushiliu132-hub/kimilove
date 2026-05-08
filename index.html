@@ -3218,7 +3218,7 @@ function renderMurmur(container) {
 function renderMidnight(container) {
   const now = new Date();
   const hour = now.getHours();
-  const isNightTime = hour >= 22 || hour < 6;
+  const isNightTime = hour >= 21 || hour < 9;
   
   container.innerHTML = `
     <div style="margin-bottom: 24px;">
